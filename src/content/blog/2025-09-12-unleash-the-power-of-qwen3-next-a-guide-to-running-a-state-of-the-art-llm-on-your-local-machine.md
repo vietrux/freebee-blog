@@ -9,8 +9,6 @@ featured: true
 tags: ["news","ai","llm"]
 ---
 
-
-
 The world of artificial intelligence is buzzing with the ever-increasing capabilities of Large Language Models (LLMs). While cloud-based solutions offer easy access, running these powerful models locally provides unparalleled privacy, cost-effectiveness, and the freedom to customize. This guide will walk you through setting up and running the impressive Qwen/Qwen3-Next-80B-A3B-Instruct model on your own hardware.
 
 ### Introducing Qwen3-Next-80B-A3B-Instruct: A Glimpse into the Future
