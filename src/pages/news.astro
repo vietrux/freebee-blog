@@ -24,7 +24,7 @@ async function getHackerNewsNewStories() {
 		const storyIds = await response.json();
 		
 		// Get first 8 story details
-		const storyPromises = storyIds.slice(0, 8).map(async (id) => {
+		const storyPromises = storyIds.slice(0, 8).map(async (id:any) => {
 			const storyResponse = await fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`);
 			return await storyResponse.json();
 		});
@@ -46,7 +46,7 @@ const hackerNewsNewStories = await getHackerNewsNewStories();
 	<!-- Breaking News Marquee -->
 	<div style="background: var(--brutal-black); padding: 0;">
 		<Marquee items={hackerNewsNewStories} />
-		<div style="text-align: center; padding: 8px 0; background: var(--brutal-black); color: var(--brutal-white); font-size: 0.8rem; font-family: 'Courier Prime', monospace; border-top: 1px solid var(--brutal-border);">
+		<div style="text-align: center; padding: 8px 0; background: var(--brutal-black); color: var(--brutal-white); font-size: 0.8rem; font-family: monospace; border-top: 1px solid var(--brutal-border);">
 			* This is a breaking news marquee from Hacker News.
 		</div>
 	</div>
@@ -105,7 +105,7 @@ const hackerNewsNewStories = await getHackerNewsNewStories();
 						<p style="font-size: 1rem; line-height: 1.4; margin-bottom: 20px;">
 							{post.data.excerpt}
 						</p>
-						<a href={`/blog/${post.slug}`} class="brutal-button" style=" text-decoration: none; display: inline-block; text-align: center; background: var(--brutal-red); color: var(--brutal-black);">
+						<a href={`/blog/${post.slug}`} class="brutal-button" style="padding: 0px 2px; text-decoration: none; display: inline-block; text-align: center; background: var(--brutal-red); color: var(--brutal-black);">
 							READ MORE
 						</a>
 					</article>
