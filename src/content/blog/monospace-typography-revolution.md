@@ -2,7 +2,7 @@
 title: "CTF WRITEUP: CRYPTOGRAPHY CHALLENGE"
 excerpt: "Solving a cryptography challenge involving RSA encryption and padding oracle attacks."
 category: "CTF"
-color: "blue"
+color: "green"
 date: "2024-01-11"
 author: "FREEBEE"
 featured: false

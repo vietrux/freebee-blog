@@ -61,6 +61,8 @@
 .animate-marquee2 { animation: marquee2 30s linear infinite; }
 .animate-marquee-slow { animation: marquee 60s linear infinite; }
 .animate-marquee2-slow { animation: marquee2 60s linear infinite; }
+.animate-marquee-very-slow { animation: marquee 120s linear infinite; }
+.animate-marquee2-very-slow { animation: marquee2 120s linear infinite; }
 
 /* Hacker News Style Markdown Styling */
 @layer base {
