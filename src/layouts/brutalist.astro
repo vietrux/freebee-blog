@@ -1,0 +1,164 @@
+---
+import '../styles/global.css';
+const { title, author = "FREEBEE" } = Astro.props;
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="generator" content={Astro.generator} />
+		<title>{title} | FREEBEE Personal Blog</title>
+		<style>
+			@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Courier+Prime:wght@400;700&display=swap');
+			
+			:root {
+				--brutal-black: #0d1117;
+				--brutal-white: #c9d1d9;
+				--brutal-red: #f85149;
+				--brutal-yellow: #f2cc60;
+				--brutal-blue: #58a6ff;
+				--brutal-green: #7ee787;
+				--brutal-orange: #ff7b72;
+				--brutal-purple: #bc8cff;
+				--brutal-gray: #21262d;
+				--brutal-border: #30363d;
+			}
+			
+			body {
+				font-family: 'Courier Prime', monospace;
+				background: var(--brutal-black);
+				color: var(--brutal-white);
+				margin: 0;
+				padding: 0;
+				line-height: 1.2;
+			}
+			
+			.brutal-border {
+				border: 1px solid var(--brutal-border);
+			}
+			
+			.brutal-border-red {
+				border: 1px solid var(--brutal-red);
+			}
+			
+			.brutal-border-yellow {
+				border: 1px solid var(--brutal-yellow);
+			}
+			
+			.brutal-border-blue {
+				border: 1px solid var(--brutal-blue);
+			}
+			
+			.brutal-text {
+				font-family: 'Orbitron', monospace;
+				font-weight: 900;
+				text-transform: uppercase;
+				letter-spacing: 2px;
+			}
+			
+			.brutal-button {
+				background: var(--brutal-gray);
+				color: var(--brutal-white);
+				border: 1px solid var(--brutal-border);
+				padding: 8px 16px;
+				font-family: 'Courier Prime', monospace;
+				font-weight: 700;
+				cursor: pointer;
+				transition: all 0.2s ease;
+			}
+			
+			.brutal-button:hover {
+				background: var(--brutal-red);
+				color: var(--brutal-black);
+				border-color: var(--brutal-red);
+			}
+			
+			.brutal-button:active {
+				background: var(--brutal-black);
+				color: var(--brutal-red);
+			}
+			
+			.news-grid {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+				gap: 20px;
+				padding: 20px;
+			}
+			
+			.news-card {
+				background: var(--brutal-gray);
+				color: var(--brutal-white);
+				padding: 16px;
+				border: 1px solid var(--brutal-border);
+				margin-bottom: 8px;
+			}
+			
+			.news-card.red {
+				border-left: 3px solid var(--brutal-red);
+			}
+			
+			.news-card.yellow {
+				border-left: 3px solid var(--brutal-yellow);
+			}
+			
+			.news-card.blue {
+				border-left: 3px solid var(--brutal-blue);
+			}
+			
+			.header {
+				background: var(--brutal-gray);
+				color: var(--brutal-white);
+				padding: 16px;
+				border-bottom: 1px solid var(--brutal-border);
+			}
+			
+			.footer {
+				background: var(--brutal-black);
+				color: var(--brutal-white);
+				padding: 16px;
+				border-top: 1px solid var(--brutal-border);
+				text-align: center;
+			}
+			
+			.author-badge {
+				background: var(--brutal-gray);
+				color: var(--brutal-red);
+				padding: 4px 8px;
+				border: 1px solid var(--brutal-border);
+				display: inline-block;
+				font-weight: 700;
+				font-size: 0.8rem;
+			}
+		</style>
+	</head>
+	<body>
+		<header class="header">
+			<div class="brutal-text" style="font-size: 3rem; text-align: center; margin-bottom: 10px;">
+				FREEBEE PERSONAL BLOG
+			</div>
+			<div style="text-align: center; font-size: 1.2rem;">
+				SECURITY • CTF • CODING • BRUTALIST DESIGN
+			</div>
+		</header>
+		
+		<main>
+			<slot />
+		</main>
+		
+		<footer class="footer">
+			<div class="author-badge">
+				BY {author}
+			</div>
+			<div style="margin-top: 10px; font-size: 0.9rem;">
+				DEVELOPER • SECURITY ENTHUSIAST • CTF PLAYER
+			</div>
+			<div style="margin-top: 10px; font-size: 0.8rem;">
+				<a href="https://t.me/frogv7" style="color: var(--brutal-yellow); text-decoration: none; font-weight: 700;">
+					CONTACT: @frogv7
+				</a>
+			</div>
+		</footer>
+	</body>
+</html>

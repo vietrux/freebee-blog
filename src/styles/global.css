@@ -1,1 +1,233 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
+
+:root {
+  --radius: 0;
+  --background: #0d1117;
+  --foreground: #c9d1d9;
+  --card: #161b22;
+  --card-foreground: #c9d1d9;
+  --primary: #f85149;
+  --primary-foreground: #0d1117;
+  --secondary: #21262d;
+  --secondary-foreground: #c9d1d9;
+  --muted: #21262d;
+  --muted-foreground: #8b949e;
+  --destructive: #f85149;
+  --border: #30363d;
+  --input: #30363d;
+  --ring: #f85149;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Marquee Animation */
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-100%); }
+}
+
+@keyframes marquee2 {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(0%); }
+}
+
+.animate-marquee { animation: marquee 30s linear infinite; }
+.animate-marquee2 { animation: marquee2 30s linear infinite; }
+.animate-marquee-slow { animation: marquee 60s linear infinite; }
+.animate-marquee2-slow { animation: marquee2 60s linear infinite; }
+
+/* Hacker News Style Markdown Styling */
+@layer base {
+  .astro-content {
+    font-family: 'Courier Prime', monospace;
+  }
+
+  .astro-content h1 {
+    font-weight: 700;
+    font-size: 1.8rem;
+    color: #c9d1d9;
+    margin: 1.5rem 0 1rem 0;
+    border-bottom: 1px solid #30363d;
+    padding-bottom: 0.5rem;
+  }
+
+  .astro-content h2 {
+    font-weight: 700;
+    font-size: 1.4rem;
+    color: #c9d1d9;
+    margin: 1.2rem 0 0.8rem 0;
+    border-left: 3px solid #f85149;
+    padding-left: 0.8rem;
+  }
+
+  .astro-content h3 {
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: #c9d1d9;
+    margin: 1rem 0 0.6rem 0;
+  }
+
+  .astro-content h4 {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #8b949e;
+    margin: 0.8rem 0 0.5rem 0;
+  }
+
+  .astro-content p {
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin: 0.8rem 0;
+    color: #c9d1d9;
+  }
+
+  .astro-content blockquote {
+    font-weight: 400;
+    font-size: 0.95rem;
+    background: #161b22;
+    color: #c9d1d9;
+    border-left: 4px solid #f85149;
+    padding: 0.8rem 1rem;
+    margin: 1rem 0;
+  }
+
+  .astro-content blockquote::before {
+    content: ">";
+    font-weight: 700;
+    font-size: 1rem;
+    color: #f85149;
+    position: absolute;
+    left: -0.5rem;
+    top: 0.8rem;
+  }
+
+  .astro-content pre {
+    font-size: 0.85rem;
+    background: #161b22;
+    color: #c9d1d9;
+    border: 1px solid #30363d;
+    padding: 1rem;
+    margin: 1rem 0;
+    overflow-x: auto;
+  }
+
+  .astro-content pre code {
+    background: transparent;
+    color: #c9d1d9;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    font-size: inherit;
+  }
+
+  .astro-content code {
+    font-weight: 400;
+    background: #161b22;
+    color: #c9d1d9;
+    padding: 0.1rem 0.3rem;
+    border: 1px solid #30363d;
+    font-size: 0.85rem;
+  }
+
+  .astro-content ul,
+  .astro-content ol {
+    margin: 1rem 0;
+    padding-left: 1.5rem;
+  }
+
+  .astro-content ul li,
+  .astro-content ol li {
+    margin: 0.4rem 0;
+    font-size: 0.95rem;
+  }
+
+  .astro-content ul li {
+    list-style: disc;
+  }
+
+  .astro-content ol li {
+    list-style: decimal;
+  }
+
+  .astro-content a {
+    color: #58a6ff;
+    text-decoration: underline;
+    font-weight: 400;
+    transition: color 0.2s ease;
+  }
+
+  .astro-content a:hover {
+    color: #f85149;
+  }
+
+  .astro-content strong {
+    font-weight: 700;
+    color: #c9d1d9;
+  }
+
+  .astro-content em {
+    font-style: italic;
+    font-weight: 400;
+    color: #c9d1d9;
+  }
+
+  .astro-content hr {
+    border: none;
+    height: 1px;
+    background: #30363d;
+    margin: 2rem 0;
+  }
+
+  .astro-content table {
+    border-collapse: collapse;
+    margin: 1rem 0;
+    border: 1px solid #30363d;
+  }
+
+  .astro-content th {
+    background: #161b22;
+    color: #c9d1d9;
+    font-weight: 700;
+    padding: 0.5rem;
+    border: 1px solid #30363d;
+    text-align: left;
+  }
+
+  .astro-content td {
+    background: #0d1117;
+    color: #c9d1d9;
+    padding: 0.5rem;
+    border: 1px solid #30363d;
+    font-weight: 400;
+  }
+
+  .astro-content tr:nth-child(even) td {
+    background: #161b22;
+  }
+}
