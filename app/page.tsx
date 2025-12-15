@@ -14,7 +14,7 @@ export default function HomePage() {
             <span className="section-label mb-6 block">[ PERSONAL BLOG ]</span>
             <h1 className="font-mono text-4xl font-bold tracking-tight text-foreground sm:text-6xl mb-6">
               WELCOME TO MY{' '}
-              <span className="bg-accent px-2">DIGITAL GARDEN</span>
+              <span className="bg-accent px-2">BLOG#</span>
             </h1>
             <p className="text-lg leading-8 text-muted-foreground mb-10 max-w-2xl mx-auto">
               Exploring the intersection of web development, technology, and innovation. 
