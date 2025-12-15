@@ -1,0 +1,48 @@
+import Link from 'next/link'
+import { format } from 'date-fns'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import type { PostMetadata } from '@/lib/mdx'
+
+interface BlogCardProps {
+  post: PostMetadata
+}
+
+export function BlogCard({ post }: BlogCardProps) {
+  const formattedDate = format(new Date(post.date), 'MMM dd, yyyy')
+
+  return (
+    <Link href={`/blog/${post.slug}`} className="block group">
+      <div className="card-feature h-full bg-white border border-border p-6">
+        <div className="flex items-center justify-between text-xs font-mono text-muted-foreground mb-4">
+          <time dateTime={post.date} className="uppercase tracking-wider">{formattedDate}</time>
+          <span>{post.readingTime}</span>
+        </div>
+        
+        <h3 className="font-mono font-bold text-lg mb-2 group-hover:text-accent transition-colors">
+          {post.title}
+        </h3>
+        
+        <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
+          {post.description}
+        </p>
+        
+        {post.tags && post.tags.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-4">
+            {post.tags.map((tag) => (
+              <span
+                key={tag}
+                className="inline-flex items-center px-2 py-0.5 text-xs font-mono border border-border text-muted-foreground"
+              >
+                {tag.toUpperCase()}
+              </span>
+            ))}
+          </div>
+        )}
+        
+        <span className="text-sm font-mono text-foreground group-hover:text-accent transition-colors">
+          READ MORE →
+        </span>
+      </div>
+    </Link>
+  )
+}
