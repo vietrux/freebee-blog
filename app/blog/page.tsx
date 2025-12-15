@@ -1,4 +1,3 @@
-import { BlogCard } from '@/components/blog/blog-card'
 import { SearchAndFilter } from '@/components/blog/search-and-filter'
 import { getAllPosts, getAllTags } from '@/lib/mdx'
 import type { Metadata } from 'next'

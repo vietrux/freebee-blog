@@ -71,7 +71,7 @@ export default async function BlogPostPage({ params }: PageProps) {
             d="M15 19l-7-7 7-7"
           />
         </svg>
-        ← BACK TO BLOG
+        BACK TO BLOG
       </Link>
 
       {/* Post Header */}
