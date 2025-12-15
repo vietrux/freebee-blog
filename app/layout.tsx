@@ -20,24 +20,24 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: 'DevBlog - Personal Tech Blog',
-    template: '%s | DevBlog',
+    default: 'FRB(2E) - Personal Tech Blog',
+    template: '%s | FRB(2E)',
   },
   description: 'A personal blog sharing insights, tutorials, and thoughts on web development and technology.',
   keywords: ['blog', 'web development', 'programming', 'technology', 'tutorials'],
-  authors: [{ name: 'Your Name' }],
-  creator: 'Your Name',
+  authors: [{ name: 'freebee' }],
+  creator: 'freebee',
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://yourdomain.com',
-    title: 'DevBlog - Personal Tech Blog',
+    url: 'https://freebee.v1.io.vn',
+    title: 'FRB(2E) - Personal Tech Blog',
     description: 'A personal blog sharing insights, tutorials, and thoughts on web development and technology.',
-    siteName: 'DevBlog',
+    siteName: 'FRB(2E)',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'DevBlog - Personal Tech Blog',
+    title: 'FRB(2E) - Personal Tech Blog',
     description: 'A personal blog sharing insights, tutorials, and thoughts on web development and technology.',
     creator: '@yourhandle',
   },

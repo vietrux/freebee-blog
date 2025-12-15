@@ -48,7 +48,7 @@ export default function AboutPage() {
         <h2 className="font-mono text-2xl font-bold text-foreground mb-6">
           TECHNOLOGIES I WORK WITH
         </h2>
-        <div className="grid gap-px sm:grid-cols-2 lg:grid-cols-3 bg-border">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 bg-white">
           {[
             {
               category: 'FRONTEND',
@@ -67,7 +67,7 @@ export default function AboutPage() {
               skills: ['Network Security', 'Cryptography', 'Ethical Hacking', 'Security Audits'],
             }
           ].map((group) => (
-            <div key={group.category} className="bg-background p-6">
+            <div key={group.category} className="bg-background p-6 border border-border">
               <h3 className="font-mono text-xs font-bold tracking-widest text-muted-foreground uppercase mb-4">
                 {group.category}
               </h3>

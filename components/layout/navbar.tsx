@@ -25,7 +25,7 @@ export function Navbar() {
               href="/" 
               className="font-mono text-xl font-bold text-foreground hover:text-accent transition-colors"
             >
-              ✦ DEVBLOG
+              ✦ FRB(2E)
             </Link>
           </div>
 
@@ -68,7 +68,7 @@ export function Navbar() {
               </svg>
             </a>
             <a
-              href="https://twitter.com"
+              href="https://twitter.com/vietrux"
               target="_blank"
               rel="noopener noreferrer"
               className="text-foreground hover:text-accent transition-colors"

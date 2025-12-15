@@ -7,7 +7,7 @@ export function Footer() {
         <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
           {/* Brand Section */}
           <div className="space-y-4">
-            <h3 className="font-mono text-lg font-bold text-foreground">✦ DEVBLOG</h3>
+            <h3 className="font-mono text-lg font-bold text-foreground">✦ FRB(2E)</h3>
             <p className="text-sm text-muted-foreground max-w-xs">
               A personal blog sharing insights, tutorials, and thoughts on web development and technology.
             </p>
@@ -79,7 +79,7 @@ export function Footer() {
         {/* Bottom Bar */}
         <div className="mt-8 border-t border-border pt-8">
           <p className="text-center text-sm font-mono text-muted-foreground">
-            © {currentYear} DEVBLOG. ALL RIGHTS RESERVED.
+            © {currentYear} FRB(2E). ALL RIGHTS RESERVED.
           </p>
         </div>
       </div>
