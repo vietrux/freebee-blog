@@ -40,7 +40,7 @@ export function Footer() {
             <h4 className="font-mono text-xs font-bold tracking-widest text-muted-foreground uppercase">CONNECT</h4>
             <div className="flex space-x-4">
               <a
-                href="https://github.com"
+                href="https://github.com/vietrux"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-foreground hover:text-accent transition-colors"
@@ -51,7 +51,7 @@ export function Footer() {
                 </svg>
               </a>
               <a
-                href="https://twitter.com"
+                href="https://twitter.com/vietrux"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-foreground hover:text-accent transition-colors"
@@ -62,7 +62,7 @@ export function Footer() {
                 </svg>
               </a>
               <a
-                href="https://linkedin.com"
+                href="https://linkedin.com/in/vietrux"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-foreground hover:text-accent transition-colors"

@@ -22,7 +22,7 @@ export default function AboutPage() {
       {/* Bio Section */}
       <section className="mb-12">
         <h2 className="font-mono text-2xl font-bold text-foreground mb-4">
-          HI, I'M <span className="bg-accent px-1">[YOUR NAME]</span> 👋
+          HI, I'M <span className="bg-accent px-1">LE VIET TRUNG</span>
         </h2>
         <div className="space-y-4 text-foreground leading-relaxed">
           <p>
@@ -31,12 +31,12 @@ export default function AboutPage() {
             my digital garden where I share what I'm learning, working on, and thinking about.
           </p>
           <p>
-            My journey in tech began [your story here], and since then, I've been constantly 
+            My journey in tech began when I started exploring web development in college, and since then, I've been constantly 
             exploring new technologies, frameworks, and best practices. I believe in learning 
             by doing and sharing knowledge with the community.
           </p>
           <p>
-            When I'm not coding, you can find me [your hobbies/interests]. I'm always excited 
+            When I'm not coding, you can find me hiking, reading sci-fi novels, or experimenting with new recipes in the kitchen. I'm always excited 
             to connect with fellow developers and learn from different perspectives.
           </p>
         </div>
@@ -62,6 +62,10 @@ export default function AboutPage() {
               category: 'TOOLS & OTHERS',
               skills: ['Git', 'Docker', 'AWS', 'CI/CD'],
             },
+            {
+              category: 'CYBERSECURITY',
+              skills: ['Network Security', 'Cryptography', 'Ethical Hacking', 'Security Audits'],
+            }
           ].map((group) => (
             <div key={group.category} className="bg-background p-6">
               <h3 className="font-mono text-xs font-bold tracking-widest text-muted-foreground uppercase mb-4">
@@ -94,7 +98,7 @@ export default function AboutPage() {
         </p>
         <div className="flex flex-wrap gap-3">
           <a
-            href="https://github.com/yourusername"
+            href="https://github.com/vietrux"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center px-4 py-2 border border-white text-white font-mono text-sm hover:bg-white hover:text-black transition-all"
@@ -105,7 +109,7 @@ export default function AboutPage() {
             GITHUB
           </a>
           <a
-            href="https://twitter.com/yourhandle"
+            href="https://twitter.com/vietrux"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center px-4 py-2 border border-white text-white font-mono text-sm hover:bg-white hover:text-black transition-all"
@@ -116,7 +120,7 @@ export default function AboutPage() {
             TWITTER
           </a>
           <a
-            href="https://linkedin.com/in/yourprofile"
+            href="https://linkedin.com/in/vietrux"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center px-4 py-2 border border-white text-white font-mono text-sm hover:bg-white hover:text-black transition-all"
@@ -127,7 +131,7 @@ export default function AboutPage() {
             LINKEDIN
           </a>
           <a
-            href="mailto:your.email@example.com"
+            href="mailto:leviettrung.social@gmail.com"
             className="inline-flex items-center px-4 py-2 border border-accent text-accent font-mono text-sm hover:bg-accent hover:text-black transition-all"
           >
             <svg className="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
