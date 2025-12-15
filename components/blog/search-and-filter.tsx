@@ -31,12 +31,12 @@ export function SearchAndFilter({ posts, tags }: SearchAndFilterProps) {
   return (
     <>
       {/* Search and Filter */}
-      <div className="mb-8 space-y-4">
+      <div className="mb-6 sm:mb-8 space-y-3 sm:space-y-4">
         {/* Search Input */}
         <div className="relative">
           <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
             <svg
-              className="h-5 w-5 text-muted-foreground"
+              className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -51,7 +51,7 @@ export function SearchAndFilter({ posts, tags }: SearchAndFilterProps) {
           </div>
           <input
             type="text"
-            className="block w-full border border-border bg-background pl-10 pr-3 py-3 font-mono text-sm text-foreground placeholder-muted-foreground focus:border-foreground focus:outline-none"
+            className="block w-full border border-border bg-background pl-9 sm:pl-10 pr-3 py-2.5 sm:py-3 font-mono text-xs sm:text-sm text-foreground placeholder-muted-foreground focus:border-foreground focus:outline-none"
             placeholder="SEARCH POSTS..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -60,10 +60,10 @@ export function SearchAndFilter({ posts, tags }: SearchAndFilterProps) {
 
         {/* Tags Filter */}
         {tags.length > 0 && (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5 sm:gap-2">
             <button
               onClick={() => setSelectedTag(null)}
-              className={`px-3 py-1.5 font-mono text-xs font-medium transition-all border ${
+              className={`px-2 sm:px-3 py-1 sm:py-1.5 font-mono text-[10px] sm:text-xs font-medium transition-all border ${
                 selectedTag === null
                   ? 'bg-foreground text-background border-foreground'
                   : 'bg-background text-muted-foreground border-border hover:border-foreground'
@@ -75,7 +75,7 @@ export function SearchAndFilter({ posts, tags }: SearchAndFilterProps) {
               <button
                 key={tag}  
                 onClick={() => setSelectedTag(tag)}
-                className={`px-3 py-1.5 font-mono text-xs font-medium transition-all border ${
+                className={`px-2 sm:px-3 py-1 sm:py-1.5 font-mono text-[10px] sm:text-xs font-medium transition-all border ${
                   selectedTag === tag
                     ? 'bg-foreground text-background border-foreground'
                     : 'bg-background text-muted-foreground border-border hover:border-foreground'
@@ -89,22 +89,22 @@ export function SearchAndFilter({ posts, tags }: SearchAndFilterProps) {
       </div>
 
       {/* Results Count */}
-      <div className="mb-6">
-        <p className="text-sm font-mono text-muted-foreground">
+      <div className="mb-4 sm:mb-6">
+        <p className="text-xs sm:text-sm font-mono text-muted-foreground">
           [ {filteredPosts.length} {filteredPosts.length === 1 ? 'POST' : 'POSTS'} FOUND ]
         </p>
       </div>
 
       {/* Posts Grid */}
       {filteredPosts.length > 0 ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 bg-white">
+        <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 bg-white">
           {filteredPosts.map((post) => (
             <BlogCard key={post.slug} post={post} />
           ))}
         </div>
       ) : (
-        <div className="text-center py-12 border border-border bg-white">
-          <p className="text-muted-foreground font-mono">
+        <div className="text-center py-8 sm:py-12 border border-border bg-white">
+          <p className="text-xs sm:text-sm text-muted-foreground font-mono">
             [ NO POSTS FOUND. TRY ADJUSTING YOUR SEARCH. ]
           </p>
         </div>

@@ -9,25 +9,25 @@ export default function HomePage() {
     <div className="flex flex-col">
       {/* Hero Section */}
       <section className="border-b border-border">
-        <div className="mx-auto max-w-7xl px-4 py-24 sm:px-6 sm:py-32 lg:px-8">
+        <div className="mx-auto max-w-7xl px-4 py-16 sm:py-24 sm:px-6 lg:py-32 lg:px-8">
           <div className="mx-auto max-w-4xl text-center">
-            <span className="section-label mb-6 block">[ PERSONAL BLOG ]</span>
-            <h1 className="font-mono text-4xl font-bold tracking-tight text-foreground sm:text-6xl mb-6">
+            <span className="section-label mb-4 sm:mb-6 block">[ PERSONAL BLOG ]</span>
+            <h1 className="font-mono text-2xl sm:text-4xl lg:text-6xl font-bold tracking-tight text-foreground mb-4 sm:mb-6">
               WELCOME TO MY{' '}
               <span className="bg-accent px-2">BLOG#</span>
             </h1>
-            <p className="text-lg leading-8 text-muted-foreground mb-10 max-w-2xl mx-auto">
+            <p className="text-sm sm:text-lg leading-7 sm:leading-8 text-muted-foreground mb-6 sm:mb-10 max-w-2xl mx-auto">
               Exploring the intersection of web development, technology, and innovation. 
               Join me as I share insights, tutorials, and thoughts on building modern web applications.
             </p>
-            <div className="flex items-center justify-center gap-4">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
               <Link href="/blog">
-                <button className="btn-primary">
+                <button className="btn-primary w-full sm:w-auto">
                   READ THE BLOG
                 </button>
               </Link>
               <Link href="/about">
-                <button className="btn-secondary">
+                <button className="btn-secondary w-full sm:w-auto">
                   ABOUT ME
                 </button>
               </Link>
@@ -39,31 +39,31 @@ export default function HomePage() {
       {/* Stats Section - E2B.dev style */}
       <section className="border-b border-border">
         <div className="mx-auto max-w-7xl">
-          <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-border text-center">
-            <div className="py-8 px-4">
-              <div className="stat-number">1+</div>
-              <div className="stat-label mt-2">BLOG POSTS</div>
+          <div className="grid grid-cols-3 divide-x divide-border text-center">
+            <div className="py-6 sm:py-8 px-2 sm:px-4">
+              <div className="text-2xl sm:text-5xl font-bold font-mono">1+</div>
+              <div className="text-[10px] sm:text-xs font-mono uppercase tracking-wider text-muted-foreground mt-1 sm:mt-2">BLOG POSTS</div>
             </div>
-            <div className="py-8 px-4">
-              <div className="stat-number">3+</div>
-              <div className="stat-label mt-2">YEARS EXPERIENCE</div>
+            <div className="py-6 sm:py-8 px-2 sm:px-4">
+              <div className="text-2xl sm:text-5xl font-bold font-mono">3+</div>
+              <div className="text-[10px] sm:text-xs font-mono uppercase tracking-wider text-muted-foreground mt-1 sm:mt-2">YEARS EXP</div>
             </div>
-            <div className="py-8 px-4">
-              <div className="stat-number">∞</div>
-              <div className="stat-label mt-2">LEARNING PASSION</div>
+            <div className="py-6 sm:py-8 px-2 sm:px-4">
+              <div className="text-2xl sm:text-5xl font-bold font-mono">∞</div>
+              <div className="text-[10px] sm:text-xs font-mono uppercase tracking-wider text-muted-foreground mt-1 sm:mt-2">PASSION</div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Featured Posts Section */}
-      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="mb-12">
-          <span className="section-label block mb-4">[ LATEST POSTS ]</span>
-          <h2 className="font-mono text-3xl font-bold tracking-tight text-foreground mb-2">
+      <section className="mx-auto max-w-7xl px-4 py-10 sm:py-16 sm:px-6 lg:px-8">
+        <div className="mb-8 sm:mb-12">
+          <span className="section-label block mb-3 sm:mb-4">[ LATEST POSTS ]</span>
+          <h2 className="font-mono text-xl sm:text-3xl font-bold tracking-tight text-foreground mb-2">
             FEATURED ARTICLES
           </h2>
-          <p className="text-muted-foreground">
+          <p className="text-sm sm:text-base text-muted-foreground">
             Check out my latest articles and tutorials
           </p>
         </div>

@@ -53,14 +53,14 @@ export default async function BlogPostPage({ params }: PageProps) {
   const formattedDate = format(new Date(post.date), 'MMMM dd, yyyy')
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:py-16 sm:px-6 lg:px-8">
       <div className="flex gap-8">
         {/* Main Content */}
-        <article className="flex-1 min-w-0">
+        <article className="flex-1 min-w-0 max-w-4xl">
           {/* Back to Blog Link */}
           <Link
             href="/blog"
-            className="inline-flex items-center text-sm font-mono text-muted-foreground hover:text-accent transition-colors mb-8"
+            className="inline-flex items-center text-sm font-mono text-muted-foreground hover:text-accent transition-colors mb-6 sm:mb-8"
           >
             <svg
               className="mr-2 h-4 w-4"
@@ -79,18 +79,18 @@ export default async function BlogPostPage({ params }: PageProps) {
           </Link>
 
           {/* Post Header */}
-          <header className="mb-12 border-b border-border pb-8">
-            <div className="mb-4 flex flex-wrap items-center gap-4 text-sm font-mono text-muted-foreground uppercase tracking-wider">
+          <header className="mb-8 sm:mb-12 border-b border-border pb-6 sm:pb-8">
+            <div className="mb-4 flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm font-mono text-muted-foreground uppercase tracking-wider">
               <time dateTime={post.date}>{formattedDate}</time>
-              <span>•</span>
+              <span className="hidden sm:inline">•</span>
               <span>{post.readingTime}</span>
             </div>
             
-            <h1 className="font-mono text-4xl font-bold tracking-tight text-foreground mb-4 sm:text-5xl">
+            <h1 className="font-mono text-2xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-foreground mb-4">
               {post.title.toUpperCase()}
             </h1>
             
-            <p className="text-xl text-muted-foreground mb-6">
+            <p className="text-base sm:text-xl text-muted-foreground mb-6">
               {post.description}
             </p>
 
@@ -100,7 +100,7 @@ export default async function BlogPostPage({ params }: PageProps) {
                   <Link
                     key={tag}
                     href={`/blog?tag=${encodeURIComponent(tag)}`}
-                    className="inline-flex items-center px-3 py-1 text-xs font-mono border border-border text-muted-foreground hover:border-foreground transition-colors"
+                    className="inline-flex items-center px-2 sm:px-3 py-1 text-xs font-mono border border-border text-muted-foreground hover:border-foreground transition-colors"
                   >
                     {tag.toUpperCase()}
                   </Link>
@@ -110,7 +110,7 @@ export default async function BlogPostPage({ params }: PageProps) {
           </header>
 
           {/* MDX Content */}
-          <div className="prose prose-lg max-w-none">
+          <div className="prose prose-sm sm:prose-lg max-w-none prose-headings:font-mono prose-headings:tracking-tight prose-pre:overflow-x-auto">
             <MDXRemote
               source={post.content}
               components={components}
@@ -152,8 +152,8 @@ export default async function BlogPostPage({ params }: PageProps) {
           </footer>
         </article>
 
-        {/* Table of Contents Sidebar */}
-        <aside className="w-64 flex-shrink-0">
+        {/* Table of Contents Sidebar - Only visible on XL screens */}
+        <aside className="hidden xl:block w-64 flex-shrink-0">
           <TableOfContents />
         </aside>
       </div>
