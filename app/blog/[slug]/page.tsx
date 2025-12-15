@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { format } from 'date-fns'
 import { getAllPostSlugs, getPostBySlug } from '@/lib/mdx'
 import { components } from '@/components/blog/mdx-components'
+import { TableOfContents } from '@/components/blog/table-of-contents'
 import { MDXRemote } from 'next-mdx-remote/rsc'
 import rehypeHighlight from 'rehype-highlight'
 import rehypeSlug from 'rehype-slug'
@@ -52,100 +53,110 @@ export default async function BlogPostPage({ params }: PageProps) {
   const formattedDate = format(new Date(post.date), 'MMMM dd, yyyy')
 
   return (
-    <article className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
-      {/* Back to Blog Link */}
-      <Link
-        href="/blog"
-        className="inline-flex items-center text-sm font-mono text-muted-foreground hover:text-accent transition-colors mb-8"
-      >
-        <svg
-          className="mr-2 h-4 w-4"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M15 19l-7-7 7-7"
-          />
-        </svg>
-        BACK TO BLOG
-      </Link>
-
-      {/* Post Header */}
-      <header className="mb-12 border-b border-border pb-8">
-        <div className="mb-4 flex flex-wrap items-center gap-4 text-sm font-mono text-muted-foreground uppercase tracking-wider">
-          <time dateTime={post.date}>{formattedDate}</time>
-          <span>•</span>
-          <span>{post.readingTime}</span>
-        </div>
-        
-        <h1 className="font-mono text-4xl font-bold tracking-tight text-foreground mb-4 sm:text-5xl">
-          {post.title.toUpperCase()}
-        </h1>
-        
-        <p className="text-xl text-muted-foreground mb-6">
-          {post.description}
-        </p>
-
-        {post.tags && post.tags.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {post.tags.map((tag) => (
-              <Link
-                key={tag}
-                href={`/blog?tag=${encodeURIComponent(tag)}`}
-                className="inline-flex items-center px-3 py-1 text-xs font-mono border border-border text-muted-foreground hover:border-foreground transition-colors"
-              >
-                {tag.toUpperCase()}
-              </Link>
-            ))}
-          </div>
-        )}
-      </header>
-
-      {/* MDX Content */}
-      <div className="prose prose-lg max-w-none">
-        <MDXRemote
-          source={post.content}
-          components={components}
-          options={{
-            mdxOptions: {
-              rehypePlugins: [
-                rehypeHighlight,
-                rehypeSlug,
-                [rehypeAutolinkHeadings, { behavior: 'wrap' }],
-              ],
-            },
-          }}
-        />
-      </div>
-
-      {/* Post Footer */}
-      <footer className="mt-16 border-t border-border pt-8">
-        <div className="flex justify-between items-center">
+    <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+      <div className="flex gap-8">
+        {/* Main Content */}
+        <article className="flex-1 min-w-0">
+          {/* Back to Blog Link */}
           <Link
             href="/blog"
-            className="inline-flex items-center text-sm font-mono text-muted-foreground hover:text-accent transition-colors"
+            className="inline-flex items-center text-sm font-mono text-muted-foreground hover:text-accent transition-colors mb-8"
           >
-            ← ALL POSTS
-          </Link>
-          <div className="flex gap-4">
-            <a
-              href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(post.title)}&url=${encodeURIComponent(`https://yourdomain.com/blog/${post.slug}`)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-foreground hover:text-accent transition-colors"
-              aria-label="Share on Twitter"
+            <svg
+              className="mr-2 h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
             >
-              <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-              </svg>
-            </a>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
+            BACK TO BLOG
+          </Link>
+
+          {/* Post Header */}
+          <header className="mb-12 border-b border-border pb-8">
+            <div className="mb-4 flex flex-wrap items-center gap-4 text-sm font-mono text-muted-foreground uppercase tracking-wider">
+              <time dateTime={post.date}>{formattedDate}</time>
+              <span>•</span>
+              <span>{post.readingTime}</span>
+            </div>
+            
+            <h1 className="font-mono text-4xl font-bold tracking-tight text-foreground mb-4 sm:text-5xl">
+              {post.title.toUpperCase()}
+            </h1>
+            
+            <p className="text-xl text-muted-foreground mb-6">
+              {post.description}
+            </p>
+
+            {post.tags && post.tags.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {post.tags.map((tag) => (
+                  <Link
+                    key={tag}
+                    href={`/blog?tag=${encodeURIComponent(tag)}`}
+                    className="inline-flex items-center px-3 py-1 text-xs font-mono border border-border text-muted-foreground hover:border-foreground transition-colors"
+                  >
+                    {tag.toUpperCase()}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </header>
+
+          {/* MDX Content */}
+          <div className="prose prose-lg max-w-none">
+            <MDXRemote
+              source={post.content}
+              components={components}
+              options={{
+                mdxOptions: {
+                  rehypePlugins: [
+                    rehypeHighlight,
+                    rehypeSlug,
+                    [rehypeAutolinkHeadings, { behavior: 'wrap' }],
+                  ],
+                },
+              }}
+            />
           </div>
-        </div>
-      </footer>
-    </article>
+
+          {/* Post Footer */}
+          <footer className="mt-16 border-t border-border pt-8">
+            <div className="flex justify-between items-center">
+              <Link
+                href="/blog"
+                className="inline-flex items-center text-sm font-mono text-muted-foreground hover:text-accent transition-colors"
+              >
+                ← ALL POSTS
+              </Link>
+              <div className="flex gap-4">
+                <a
+                  href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(post.title)}&url=${encodeURIComponent(`https://yourdomain.com/blog/${post.slug}`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-foreground hover:text-accent transition-colors"
+                  aria-label="Share on Twitter"
+                >
+                  <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                  </svg>
+                </a>
+              </div>
+            </div>
+          </footer>
+        </article>
+
+        {/* Table of Contents Sidebar */}
+        <aside className="w-64 flex-shrink-0">
+          <TableOfContents />
+        </aside>
+      </div>
+    </div>
   )
 }
